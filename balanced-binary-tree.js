@@ -29,6 +29,7 @@ class BalancedBinaryTree {
         this.left = new BalancedBinaryTree(value);
         this.left.parent.node = this;
         this.left.parent.side = 'left';
+        checkAndRotateRoots(this);
       }
     } else {
       if (this.right !== null) {
@@ -37,6 +38,7 @@ class BalancedBinaryTree {
         this.right = new BalancedBinaryTree(value);
         this.right.parent.node = this;
         this.right.parent.side = 'right';
+        checkAndRotateRoots(this);
       }
     }
   }
@@ -68,73 +70,83 @@ class BalancedBinaryTree {
       this.right.depthFirstLog(callback);
     }
   }
+}
 
-  leftRotate(rootNode) {
-    //  root, pivot
-    //  pivot is to right of root, root is pivot's left parent
-    //  pivot's child becomes root's child
-    
-  
+function checkAndRotateRoots(root) {
+  //  check if root is unbalanced
+  //    balance factor outside range [-1, 1]
+  //    if so, rotate root
+  //    check parent node too
+  if (root) {
+    var bf = root.balanceFactor();
+    if (bf < -1 || bf > 1) {
+      rotate(root);
+    }
+    checkAndRotateRoots(root.parent.node);
   }
+}
+
+function rotate(root) {
+  if (root.balanceFactor() > 1) {
+    // unbalanced to left, rotate right
+    // check for need for left-right rotation
+    if (root.left.balanceFactor() === -1) {
+      leftRotate(root.left);
+    }
+    rightRotate(root);
+  } else if (root.balanceFactor() < -1) {
+    // unbalanced to right, rotate left
+    if (root.right.balanceFactor() === 1) {
+      rightRotate(root.right);
+    }
+    leftRotate(root);
+  }
+}
+
+function rightRotate(rootNode) {
+  /*
+  The pivot node’s parent is now going to be the parent node (20), 
+  and the parent node’s new left is going to be the old pivot node. 
+  The pivot node’s right will be the old root node, and the old root 
+  node’s parent will be the pivot node, or new root node. The old 
+  root node’s left will now be null. If the new root node initially 
+  had a right child, that would have become the old root node’s 
+  left. 
+  */
+  var pivot = rootNode.left;
   
-  rightRotate(rootNode) {
-    /*
-    The pivot node’s parent is now going to be the parent node (20), 
-    and the parent node’s new left is going to be the old pivot node. 
-    The pivot node’s right will be the old root node, and the old root 
-    node’s parent will be the pivot node, or new root node. The old 
-    root node’s left will now be null. If the new root node initially 
-    had a right child, that would have become the old root node’s 
-    left. 
-    */
-    var pivot = rootNode.left;
-    
+  if (rootNode.parent.node) {
     //  reassign the parent of the pivot to the rootnode's parent
     //    only if root node has a parent
     pivot.parent.node = rootNode.parent.node;
     pivot.parent.side = 'left';
     //  make the pivot the left child of the root's parent
-    rootNode.parent.left = pivot;
-
-    //  save the pivot's right node if there is one
-    var pivotRightChild = pivot.right;
-    
-    //  reassign the parent of the root to the pivot
-    rootNode.parent.node = pivot;
-    rootNode.parent.side = 'right';
-    //  make the rootNode the right child of the pivot
-    pivot.right = rootNode;
-
-  }
-
-  checkAndRotateRoots(root) {
-    //  check if root is unbalanced
-    //    balance factor outside range [-1, 1]
-    //    if so, rotate root
-    //    check parent node too
-    if (root) {
-      var bf = root.balanceFactor();
-      if (bf < -1 || bf > 1) {
-        rotate(root);
-      }
-      checkAndRotateRoots(root.parent.node);
-    }
-  }
-
-  rotate(root) {
-    if (root.balanceFactor() > 1) {
-      // unbalanced to left, rotate right
-      // check for need for left-right rotation
-      if (root.left.balanceFactor === 1) {
-        leftRotate(root.left);
-      }
-      rightRotate(root);
-    } else if (root.balanceFactor() < 1) {
-      // unbalanced to right, rotate left
-      if (root.right.balanceFactor === -1) {
-        rightRotate(root.right);
-      }
-    }
+    rootNode.parent.node.left = pivot;
   }
   
+  //  (re)assign the parent of the root to the pivot
+  rootNode.parent.node = pivot;
+  rootNode.parent.side = 'right';
+  
+  if (pivot.right) {
+    //  save the pivot's right node if there is one
+    var pivotRightChild = pivot.right;
+    //  make the pivot's old right node the left node of the root
+    //    if there was an old right node
+    rootNode.left = pivotRightChild;
+  }
+  //  above might work just as, even if pivot.right is null:
+  //rootNode.left = pivot.right;
+  
+  //  make the rootNode the right child of the pivot
+  pivot.right = rootNode;
+}
+
+
+function leftRotate(rootNode) {
+  //  root, pivot
+  //  pivot is to right of root, root is pivot's left parent
+  //  pivot's child becomes root's child
+  
+
 }
